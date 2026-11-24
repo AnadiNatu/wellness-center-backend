@@ -2,11 +2,9 @@ package com.demo.wellness_center.adapter.web.controller;
 
 import com.demo.wellness_center.adapter.web.dto.AppointmentDto;
 import com.demo.wellness_center.adapter.web.dto.AuthDto;
+import com.demo.wellness_center.adapter.web.dto.ReviewDto;
 import com.demo.wellness_center.adapter.web.dto.WellnessDto;
-import com.demo.wellness_center.adapter.web.service.AppointmentService;
-import com.demo.wellness_center.adapter.web.service.AuthService;
-import com.demo.wellness_center.adapter.web.service.UserService;
-import com.demo.wellness_center.adapter.web.service.WellnessServiceService;
+import com.demo.wellness_center.adapter.web.service.*;
 import com.demo.wellness_center.domain.enums.AppointmentStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +27,8 @@ public class AdminController {
     private final UserService userService;
     private final WellnessServiceService wellnessService;
     private final AppointmentService appointments;
+    private final ReviewService reviewService;
+    private final ApplicationMediaService mediaService;
 
     @GetMapping("/users")
     public List<AuthDto.UserResponse> users(@RequestParam(defaultValue = "0") int page,
@@ -142,6 +142,42 @@ public class AdminController {
     @PatchMapping("/appointments/{id}/notes")
     public AppointmentDto.AppointmentResponse notes(@PathVariable UUID id, @Valid @RequestBody AppointmentDto.NotesRequest r) {
         return appointments.updateNotes(id, r.notes());
+    }
+
+    // ---------- reviews ----------
+
+    @GetMapping("/reviews")
+    public List<ReviewDto.ReviewResponse> listReviews(@RequestParam(required = false) UUID serviceId,
+                                                      @RequestParam(required = false) Boolean approved,
+                                                      @RequestParam(required = false) Boolean visible,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "20") int size) {
+        return reviewService.listAdmin(serviceId, approved, visible, page, size);
+    }
+
+    @GetMapping("/reviews/featured")
+    public List<ReviewDto.ReviewResponse> featuredReviews() {
+        return reviewService.featured();
+    }
+
+    @PatchMapping("/reviews/{id}/approve")
+    public ReviewDto.ReviewResponse approveReview(@PathVariable UUID id) {
+        return reviewService.approve(id);
+    }
+
+    @PatchMapping("/reviews/{id}/reject")
+    public ReviewDto.ReviewResponse rejectReview(@PathVariable UUID id) {
+        return reviewService.reject(id);
+    }
+
+    @PatchMapping("/reviews/{id}/hide")
+    public ReviewDto.ReviewResponse hideReview(@PathVariable UUID id) {
+        return reviewService.hide(id);
+    }
+
+    @PatchMapping("/reviews/{id}/reply")
+    public ReviewDto.ReviewResponse replyReview(@PathVariable UUID id, @Valid @RequestBody ReviewDto.ReplyRequest r) {
+        return reviewService.reply(id, r.reply());
     }
 
     private UUID adminId(Authentication a) {
